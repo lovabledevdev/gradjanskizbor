@@ -1,0 +1,429 @@
+-- Create types for community types and post types
+CREATE TYPE public.community_type AS ENUM ('city', 'municipality', 'local');
+CREATE TYPE public.post_type AS ENUM ('regular', 'corruption', 'environment', 'public-space');
+CREATE TYPE public.post_visibility AS ENUM ('public', 'city', 'local');
+
+-- Create profiles table for user information
+CREATE TABLE public.profiles (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  full_name TEXT,
+  avatar_url TEXT,
+  cover_url TEXT,
+  background_url TEXT,
+  address TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
+
+-- Create communities table (cities, municipalities, local communities)
+CREATE TABLE public.communities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  type community_type NOT NULL,
+  description TEXT,
+  parent_id UUID REFERENCES public.communities(id),
+  cover_image TEXT,
+  member_count INTEGER DEFAULT 0 NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  UNIQUE(name, type, parent_id)
+);
+
+-- Create table for user follows (user -> user)
+CREATE TABLE public.user_follows (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  follower_id UUID REFERENCES auth.users(id) NOT NULL,
+  following_id UUID REFERENCES auth.users(id) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  UNIQUE(follower_id, following_id)
+);
+
+-- Create table for community follows (user -> community)
+CREATE TABLE public.community_follows (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  community_id UUID REFERENCES public.communities(id) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  UNIQUE(user_id, community_id)
+);
+
+-- Create table for posts
+CREATE TABLE public.posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id UUID REFERENCES auth.users(id) NOT NULL,
+  community_id UUID REFERENCES public.communities(id) NOT NULL,
+  content TEXT NOT NULL,
+  type post_type DEFAULT 'regular' NOT NULL,
+  visibility post_visibility DEFAULT 'public' NOT NULL,
+  is_anonymous BOOLEAN DEFAULT false NOT NULL,
+  image_url TEXT,
+  document_url TEXT,
+  likes_count INTEGER DEFAULT 0 NOT NULL,
+  comments_count INTEGER DEFAULT 0 NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
+
+-- Create table for comments
+CREATE TABLE public.comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES public.posts(id) NOT NULL,
+  author_id UUID REFERENCES auth.users(id) NOT NULL,
+  content TEXT NOT NULL,
+  is_anonymous BOOLEAN DEFAULT false NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
+
+-- Create table for likes
+CREATE TABLE public.likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES public.posts(id) NOT NULL,
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  UNIQUE(post_id, user_id)
+);
+
+-- Create table for messages
+CREATE TABLE public.messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID REFERENCES auth.users(id) NOT NULL,
+  receiver_id UUID REFERENCES auth.users(id) NOT NULL,
+  content TEXT NOT NULL,
+  read BOOLEAN DEFAULT false NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
+
+-- Create table for notifications
+CREATE TABLE public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  content TEXT NOT NULL,
+  type TEXT NOT NULL,
+  related_id UUID,
+  read BOOLEAN DEFAULT false NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
+
+-- Create table for moderator voting
+CREATE TABLE public.moderator_voting (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  community_id UUID REFERENCES public.communities(id) NOT NULL,
+  start_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  end_date TIMESTAMP WITH TIME ZONE DEFAULT now() + INTERVAL '7 days' NOT NULL,
+  is_active BOOLEAN DEFAULT true NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
+
+-- Create table for votes
+CREATE TABLE public.votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  voting_id UUID REFERENCES public.moderator_voting(id) NOT NULL,
+  voter_id UUID REFERENCES auth.users(id) NOT NULL,
+  candidate_id UUID REFERENCES auth.users(id) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  UNIQUE(voting_id, voter_id)
+);
+
+-- Create table for community moderators
+CREATE TABLE public.community_moderators (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  community_id UUID REFERENCES public.communities(id) NOT NULL,
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  UNIQUE(community_id, user_id)
+);
+
+-- Enable Row-Level Security on all tables
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.communities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.moderator_voting ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.votes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_moderators ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for profiles
+CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert their own profile" ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Users can update their own profile" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Create RLS policies for communities
+CREATE POLICY "Communities are viewable by everyone" ON public.communities
+  FOR SELECT USING (true);
+
+CREATE POLICY "Only authenticated users can create communities" ON public.communities
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Only moderators can update communities" ON public.communities
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.community_moderators
+      WHERE community_id = id AND user_id = auth.uid()
+    )
+  );
+
+-- Create RLS policies for user follows
+CREATE POLICY "User follows are viewable by everyone" ON public.user_follows
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can follow other users" ON public.user_follows
+  FOR INSERT WITH CHECK (auth.uid() = follower_id);
+
+CREATE POLICY "Users can unfollow users they follow" ON public.user_follows
+  FOR DELETE USING (auth.uid() = follower_id);
+
+-- Create RLS policies for community follows
+CREATE POLICY "Community follows are viewable by everyone" ON public.community_follows
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can follow communities" ON public.community_follows
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can unfollow communities they follow" ON public.community_follows
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Create RLS policies for posts
+CREATE POLICY "Public posts are viewable by everyone" ON public.posts
+  FOR SELECT USING (visibility = 'public');
+
+CREATE POLICY "City posts are viewable by city members" ON public.posts
+  FOR SELECT USING (
+    visibility = 'city' AND
+    EXISTS (
+      SELECT 1 FROM public.community_follows cf
+      JOIN public.communities c ON c.id = cf.community_id
+      WHERE c.id = community_id AND cf.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Local posts are viewable by local community members" ON public.posts
+  FOR SELECT USING (
+    visibility = 'local' AND
+    EXISTS (
+      SELECT 1 FROM public.community_follows cf
+      WHERE cf.community_id = community_id AND cf.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can create posts" ON public.posts
+  FOR INSERT WITH CHECK (auth.uid() = author_id);
+
+CREATE POLICY "Users can update their own posts" ON public.posts
+  FOR UPDATE USING (auth.uid() = author_id);
+
+CREATE POLICY "Users can delete their own posts" ON public.posts
+  FOR DELETE USING (auth.uid() = author_id);
+
+-- Create RLS policies for comments
+CREATE POLICY "Comments on public posts are viewable by everyone" ON public.comments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.posts
+      WHERE posts.id = post_id AND posts.visibility = 'public'
+    )
+  );
+
+CREATE POLICY "Comments on city posts are viewable by city members" ON public.comments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.posts p
+      JOIN public.communities c ON c.id = p.community_id
+      JOIN public.community_follows cf ON cf.community_id = c.id
+      WHERE p.id = post_id AND p.visibility = 'city' AND cf.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Comments on local posts are viewable by local members" ON public.comments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.posts p
+      JOIN public.community_follows cf ON cf.community_id = p.community_id
+      WHERE p.id = post_id AND p.visibility = 'local' AND cf.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can create comments" ON public.comments
+  FOR INSERT WITH CHECK (auth.uid() = author_id);
+
+CREATE POLICY "Users can update their own comments" ON public.comments
+  FOR UPDATE USING (auth.uid() = author_id);
+
+CREATE POLICY "Users can delete their own comments" ON public.comments
+  FOR DELETE USING (auth.uid() = author_id);
+
+-- Create RLS policies for likes
+CREATE POLICY "Likes are viewable by everyone" ON public.likes
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can like posts" ON public.likes
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can unlike posts they liked" ON public.likes
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Create RLS policies for messages
+CREATE POLICY "Users can view their own messages" ON public.messages
+  FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+CREATE POLICY "Users can send messages" ON public.messages
+  FOR INSERT WITH CHECK (auth.uid() = sender_id);
+
+-- Create RLS policies for notifications
+CREATE POLICY "Users can view their own notifications" ON public.notifications
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can mark notifications as read" ON public.notifications
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Create RLS policies for moderator voting
+CREATE POLICY "Moderator voting is viewable by everyone" ON public.moderator_voting
+  FOR SELECT USING (true);
+
+CREATE POLICY "Only moderators can start voting" ON public.moderator_voting
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.community_moderators
+      WHERE community_id = community_id AND user_id = auth.uid()
+    )
+  );
+
+-- Create RLS policies for votes
+CREATE POLICY "Votes are viewable by everyone" ON public.votes
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can vote once per voting" ON public.votes
+  FOR INSERT WITH CHECK (auth.uid() = voter_id);
+
+-- Create RLS policies for community moderators
+CREATE POLICY "Community moderators are viewable by everyone" ON public.community_moderators
+  FOR SELECT USING (true);
+
+-- Create functions to automatically handle follow counts
+CREATE OR REPLACE FUNCTION public.update_community_member_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE public.communities
+    SET member_count = member_count + 1
+    WHERE id = NEW.community_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE public.communities
+    SET member_count = member_count - 1
+    WHERE id = OLD.community_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create triggers for community member count
+CREATE TRIGGER after_community_follow_changes
+  AFTER INSERT OR DELETE ON public.community_follows
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_community_member_count();
+
+-- Create function to handle profiles on user creation
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username, full_name, avatar_url)
+  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'avatar_url');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger for new user profile creation
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
+
+-- Create function to get communities with real users
+CREATE OR REPLACE FUNCTION public.get_communities_with_users()
+RETURNS TABLE (
+  id UUID,
+  name TEXT,
+  type community_type,
+  description TEXT,
+  parent_id UUID,
+  cover_image TEXT,
+  member_count INTEGER,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT c.*
+  FROM public.communities c
+  JOIN public.community_follows cf ON c.id = cf.community_id
+  GROUP BY c.id
+  HAVING COUNT(cf.user_id) > 0;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create function to check if user can message another user
+CREATE OR REPLACE FUNCTION public.can_send_message(sender_id UUID, receiver_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.user_follows
+    WHERE follower_id = receiver_id AND following_id = sender_id
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create an index for better performance on community queries
+CREATE INDEX idx_communities_type ON public.communities(type);
+CREATE INDEX idx_communities_parent_id ON public.communities(parent_id);
+CREATE INDEX idx_posts_community_id ON public.posts(community_id);
+CREATE INDEX idx_posts_visibility ON public.posts(visibility);
+CREATE INDEX idx_community_follows_user_id ON public.community_follows(user_id);
+CREATE INDEX idx_community_follows_community_id ON public.community_follows(community_id);
+CREATE INDEX idx_user_follows_follower_id ON public.user_follows(follower_id);
+CREATE INDEX idx_user_follows_following_id ON public.user_follows(following_id);
+
+-- Storage setup for files (images and documents)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('user-avatars', 'User Avatars', true);
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('community-covers', 'Community Covers', true);
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('post-attachments', 'Post Attachments', true);
+
+-- Create storage policies for public access to avatars and covers
+CREATE POLICY "Avatar images are publicly accessible." ON storage.objects
+  FOR SELECT USING (bucket_id = 'user-avatars');
+
+CREATE POLICY "Users can upload their own avatars." ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'user-avatars' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Users can update their own avatars." ON storage.objects
+  FOR UPDATE USING (bucket_id = 'user-avatars' AND owner = auth.uid());
+
+CREATE POLICY "Community covers are publicly accessible." ON storage.objects
+  FOR SELECT USING (bucket_id = 'community-covers');
+
+CREATE POLICY "Users can upload community covers." ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'community-covers' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Post attachments are publicly accessible." ON storage.objects
+  FOR SELECT USING (bucket_id = 'post-attachments');
+
+CREATE POLICY "Users can upload post attachments." ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'post-attachments' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Users can update their own post attachments." ON storage.objects
+  FOR UPDATE USING (bucket_id = 'post-attachments' AND owner = auth.uid());
