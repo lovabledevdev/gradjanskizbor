@@ -1,0 +1,466 @@
+*Beograd
+
+**Vracar
+
+**Novi Beograd
+Paviljoni
+Studentski grad
+Staro Sajmište
+Bežanija
+Ledine
+Fontana
+Pariske komune
+Ušće
+Ikarus
+Stari Aerodrom
+Akademija
+Sava
+Gazela
+Savski kej
+Bežanijski blokovi
+Dunavski kej
+Mladost
+Bežanijska kosa
+Dr Ivan Ribar
+
+**Zvezdara
+Mirijevo
+Lion
+Konjarnik
+Cvetkova pijaca
+
+**Savski Venac
+
+Četvrti juli
+Dedinje
+Gavrilo Princip
+Slobodan Penezić Krcun
+Stevan Filipović
+Topčidersko brdo - Senjak
+Vojvoda Mišić
+Zapadni Vračar
+Zeleni venac
+
+**Palilula
+
+Karaburma
+Borča
+Ovča
+Kotež
+Višnjička Banja
+
+**Cukarica
+**Rakovica
+
+**Zemun
+
+**Surcin
+
+**Obrenovac
+
+**Lazarevac
+
+**Mladenovac
+
+**Sopot
+
+**Grocka
+
+*Novi Sad
+
+**Futog
+Futog
+
+**Veternik
+Veternik
+
+**Begeč
+Begeč
+
+**Kisač
+Kisač
+
+**Rumenka
+Rumenka
+
+**Stepanovićevo
+Stepanovićevo
+
+**Kać
+Kać
+Budisava
+Kovilj
+Čenej
+
+**Novi Sad (centralna gradska zona)
+Stari Grad
+Žitni Trg
+Liman I
+Liman II
+Liman III
+Liman IV
+Sonja Marinković
+Boško Buha
+Ostrvo
+Ivo Andrić
+Vera Pavlović
+7. juli
+Južni Telep
+Bratstvo-Telep
+Nikola Tesla - Telep
+Gavrilo Princip
+Bistrica
+Adice
+Jugovićevo
+Radnički
+Detelinara
+Narodni Heroji
+Omladinski pokret
+Sava Kovačević
+Dunav
+Podbara
+Slana Bara
+Klisa
+Vidovdansko naselje
+Salajka
+Šangaj
+Sajlovo
+Pejićevi Salaši - Nemanovci
+
+**Petrovaradin
+Petrovaradin
+Sremska Kamenica
+Bukovac
+Ledinci
+Stari Ledinci
+
+*Novi Pazar
+
+Parice
+
+Đurđevi Stupovi
+
+Ćukovac
+
+Jošanica
+
+Musala
+
+Lug
+
+Trnava
+
+Rajetiće
+
+Odojeviće
+
+Lukare
+
+Kominje
+
+Mur
+
+Grubetiće
+
+Deževa
+
+Vranovina
+
+Šaronje
+
+Rajčinoviće
+
+Požega
+
+Sopoćani
+
+Sebečevo
+
+Vučiniće
+
+Pope
+
+Štitare
+
+Bele Vode
+
+Postenje
+
+Građanoviće
+
+*Tutin
+
+Tutin I gradska
+
+Tutin II gradska
+
+Tutin III gradska
+
+Tutin IV gradska
+
+Dubovo
+
+Bujkoviće
+
+Dobrinja
+
+Biohane
+
+Detane
+
+Dolovo
+
+Suhi Do
+
+Leskova
+
+Draga
+
+Mojstir
+
+Ribariće
+
+Orlje
+
+Reževiće
+
+Melaje
+
+Delimeđe
+
+Sjenica
+
+Sjenica
+
+Bare
+
+Vapa
+
+Gonje
+
+Duga Poljana
+
+Karajukića Bunari
+
+Kladnica
+
+Lopiže
+
+Raždaginja
+
+Rasno
+
+Trijebine
+
+Štavalj
+
+Raška
+
+Raška
+
+Jošanička Banja
+
+Kaznoviće
+
+Kovači
+
+Milatkoviće
+
+Radošiće
+
+Beoci
+
+Brvenik
+
+Varevo
+
+Rudnica
+
+Supnje
+
+Banja
+
+Biševac
+
+Baljevac
+
+Rvati
+
+Nikoljača
+
+Trnava
+
+Lisina
+
+Panojeviće
+
+Pavlica
+
+Gnjilica
+
+Sebimilje
+
+Belo Polje
+
+Brvenica
+
+Bioska
+
+Brezova
+
+Brezovica
+
+Bumbarevo Brdo
+
+Golija
+
+Gračanica
+
+Gradište
+
+Gradac
+
+Dojinoviće
+
+Drenova
+
+Đonlije
+
+Zaređe
+
+Zavrata
+
+Zlatariće
+
+Zlatar
+
+Zlatare
+
+Zlatarica
+
+Zlatarovo
+
+*Niš
+
+**Crveni Krst
+Popovac
+Donja Vrežina
+Gornja Vrežina
+Medoševac
+Milka Protić
+Crveni Krst
+Palilula
+Niška Banja
+Pantelej
+Medijana
+
+**Palilula
+Bubanj
+Delijski Vis
+Durlan
+Gabrovac
+Gornja Toponica
+Donja Toponica
+Kamenica
+Knez Selo
+Lalinac
+Mramor
+Pasi Poljana
+Suvi Do
+Čokot
+Čalije
+
+**Pantelej
+Berbatovo
+Donja Vrežina
+Gornja Vrežina
+Kamenica
+Malča
+Oreovac
+Pantelej
+Pasjača
+Prosek
+Cerje
+Čamurlija
+Šangaj
+
+**Medijana
+Medijana
+Ćele Kula
+Božidar Adžija
+Mija Stanimirović
+Filip Kljajić
+Braće Tasković
+Čair
+Obilićev Venac
+Duško Radović
+Brzi Brod
+
+**Niška Banja
+Niška Banja
+Donja Vrežina
+Gornja Vrežina
+Jelašnica
+Prosek
+Sopotnica
+Čegar
+Kamenica
+Ostrovica
+Brenica
+Gornja Studena
+Donja Studena
+Gornja Toponica
+Donja Toponica
+
+*Čačak
+
+Atenica
+Kulinovci
+Pridvorica
+Jezdina
+Bela Reka
+Vujetinci
+Bresnica
+Goričani
+Kačulice
+Gornja Trepča
+Gornja Gorevnica
+Donja Trepča
+Donja Gorevnica
+Zablaće
+Vapa
+Baluga (Trnavska)
+Ježevica
+Banjiца
+Lipnica
+Katrga
+Konjevići
+Baluga (Ljubićska)
+Loznica
+Ljubić
+Milićevci
+Miokovci
+Mrčajevci
+Mojsinje
+Mršinci
+Ostra
+Parmenac
+Petnica
+Prijevor
+Preljevska
+Prislonica
+Rošci
+Trbušani
+Trnava
+Alvadžinica
+3. decembar
+7. oktobar
+Palilula
+Park
+Stari grad
+Ljubić kej
+Sveti Sava
+Tanasko Rajić
+Beljina
+Sajmište
+Lugovi
